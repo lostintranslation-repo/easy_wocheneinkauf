@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Wochenplaner &amp; Einkaufsliste</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F7F0;
+    --surface:#FFFFFF;
+    --surface-alt:#EAF0E2;
+    --ink:#213326;
+    --ink-soft:#5E6F5C;
+    --primary:#3F6B4F;
+    --primary-dark:#2C4E38;
+    --primary-soft:#DDEAE0;
+    --accent:#E0A23B;
+    --accent-dark:#C6841B;
+    --accent-soft:#F7E7C4;
+    --danger:#C1584B;
+    --border:#DCE4D3;
+    --radius-lg:18px;
+    --radius-md:14px;
+    --radius-sm:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100dvh;
+  }
+  h1,h2,h3,.heading{
+    font-family:'Poppins',-apple-system,sans-serif;
+    color:var(--primary-dark);
+    margin:0;
+  }
+  .app-shell{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    background:var(--bg);
+    position:relative;
+  }
+  .app-header{
+    padding:20px 20px 14px 20px;
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:5;
+  }
+  .app-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:20px;
+    font-weight:700;
+  }
+  .app-title .emoji{font-size:24px;}
+  .step-track{
+    display:flex;
+    gap:6px;
+    margin-top:14px;
+  }
+  .step-seg{
+    flex:1;
+    height:6px;
+    border-radius:6px;
+    background:var(--border);
+    transition:background .25s ease;
+  }
+  .step-seg.active{background:var(--primary);}
+  .step-label{
+    margin-top:8px;
+    font-size:13px;
+    color:var(--ink-soft);
+    font-weight:600;
+  }
+  .app-body{
+    flex:1;
+    padding:6px 20px 24px 20px;
+    overflow-y:auto;
+  }
+  .page-title{
+    font-size:22px;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .page-sub{
+    font-size:14.5px;
+    color:var(--ink-soft);
+    line-height:1.5;
+    margin-bottom:18px;
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .day-card{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .day-label{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-weight:600;
+    font-size:15px;
+  }
+  .day-badge{
+    width:26px;height:26px;
+    border-radius:50%;
+    background:var(--primary-soft);
+    color:var(--primary-dark);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:700;
+    flex-shrink:0;
+  }
+  select{
+    width:100%;
+    padding:14px 12px;
+    font-size:16px;
+    border-radius:var(--radius-md);
+    border:1.5px solid var(--border);
+    background:var(--surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1l6 6 6-6' stroke='%235E6F5C' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 14px center;
+    appearance:none;
+    -webkit-appearance:none;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  select:focus{outline:2px solid var(--primary);outline-offset:1px;}
+  .section-title{
+    font-size:15px;
+    font-weight:700;
+    color:var(--primary-dark);
+    margin:20px 0 10px 0;
+  }
+  .section-title:first-child{margin-top:0;}
+  .badge-week{
+    display:inline-block;
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--accent-dark);
+    background:var(--accent-soft);
+    padding:2px 7px;
+    border-radius:20px;
+    margin-left:8px;
+    vertical-align:middle;
+  }
+  .check-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 4px;
+    border-bottom:1px solid var(--border);
+    cursor:pointer;
+    user-select:none;
+  }
+  .check-row:last-child{border-bottom:none;}
+  .checkbox{
+    width:24px;height:24px;
+    border-radius:8px;
+    border:2px solid var(--primary);
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--surface);
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .checkbox.checked{background:var(--primary);}
+  .checkbox svg{opacity:0;transition:opacity .1s ease;}
+  .checkbox.checked svg{opacity:1;}
+  .check-text{
+    font-size:15px;
+    line-height:1.3;
+  }
+  .check-text.unchecked{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:var(--border);}
+  .hint-box{
+    background:var(--primary-soft);
+    color:var(--primary-dark);
+    border-radius:var(--radius-md);
+    padding:12px 14px;
+    font-size:13.5px;
+    line-height:1.5;
+    margin-bottom:16px;
+  }
+  .empty-hint{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:14.5px;
+    padding:30px 10px;
+    line-height:1.6;
+  }
+  .manual-item-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 4px;
+    border-bottom:1px solid var(--border);
+    font-size:15px;
+  }
+  .manual-item-row:last-child{border-bottom:none;}
+  .del-btn{
+    background:none;
+    border:none;
+    color:var(--danger);
+    font-size:20px;
+    line-height:1;
+    padding:4px 8px;
+    cursor:pointer;
+  }
+  .manual-add-btn{
+    width:100%;
+    padding:14px;
+    border-radius:var(--radius-md);
+    border:1.5px dashed var(--primary);
+    background:var(--primary-soft);
+    color:var(--primary-dark);
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .manual-input-row{
+    display:flex;
+    gap:8px;
+  }
+  .manual-input-row input{
+    flex:1;
+    padding:13px 12px;
+    font-size:16px;
+    border-radius:var(--radius-md);
+    border:1.5px solid var(--primary);
+    font-family:inherit;
+  }
+  .manual-input-row input:focus{outline:none;}
+  .btn{
+    border:none;
+    border-radius:var(--radius-md);
+    font-weight:600;
+    font-size:15px;
+    padding:14px 16px;
+    cursor:pointer;
+    font-family:inherit;
+    transition:transform .05s ease, opacity .15s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-accent{background:var(--accent);color:#3A2A05;}
+  .btn-ghost{background:var(--surface-alt);color:var(--ink);}
+  .btn-text{background:none;color:var(--primary-dark);text-decoration:underline;padding:10px;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .footer-nav{
+    position:sticky;
+    bottom:0;
+    background:linear-gradient(to top, var(--bg) 70%, rgba(244,247,240,0));
+    padding:14px 20px calc(18px + env(safe-area-inset-bottom)) 20px;
+    display:flex;
+    gap:10px;
+  }
+  .footer-nav .btn{flex:1;}
+  .footer-nav .btn-back{flex:0 0 88px;}
+  .receipt{
+    background:var(--surface);
+    border:1.5px dashed var(--primary);
+    border-radius:var(--radius-lg);
+    padding:20px 18px 24px 18px;
+    font-family:'JetBrains Mono',monospace;
+    position:relative;
+  }
+  .receipt-head{
+    text-align:center;
+    margin-bottom:12px;
+    padding-bottom:12px;
+    border-bottom:1.5px dashed var(--border);
+  }
+  .receipt-head .t1{font-weight:700;font-size:15px;letter-spacing:1px;}
+  .receipt-head .t2{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+  .receipt-line{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:13.5px;
+    padding:6px 0;
+    line-height:1.4;
+  }
+  .receipt-line .name{color:var(--ink);}
+  .receipt-line .qty{color:var(--primary-dark);font-weight:600;white-space:nowrap;}
+  .receipt-foot{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1.5px dashed var(--border);
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    letter-spacing:.5px;
+  }
+  .share-row{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+  }
+  .share-btn{
+    flex:1;
+    text-align:center;
+    font-size:12.5px;
+    line-height:1.6;
+    padding:12px 6px;
+  }
+  .share-copy{background:var(--surface-alt);color:var(--ink);}
+  .share-whatsapp{background:#DDF2E4;color:#1F7A46;}
+  .share-email{background:var(--primary-soft);color:var(--primary-dark);}
+  .save-note{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:16px;
+    margin-top:-8px;
+  }
+  .copied-toast{
+    position:fixed;
+    bottom:100px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--primary-dark);
+    color:#fff;
+    padding:10px 18px;
+    border-radius:30px;
+    font-size:14px;
+    font-weight:600;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+    z-index:50;
+    animation:fadein .2s ease;
+  }
+  @keyframes fadein{from{opacity:0;transform:translate(-50%,8px);}to{opacity:1;transform:translate(-50%,0);}}
+  ::selection{background:var(--accent-soft);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useMemo, useEffect } = React;
+
+/* ---------------------------------------------------------
+   DATEN
+--------------------------------------------------------- */
+
+const GEMUESE_OPTIONS = ['Brokkoli', 'Bohnen', 'Spinat', 'Sonstiges Gemüse'];
+const VEGGIE_OPTIONS = ['Veganes Schnitzel', 'Veganes Hähnchen', 'Gazi-Käse', 'Mozzarella-Sticks', 'Chili Cheese Nuggets', 'Sonstiges'];
+
+const I = (name, amount = null, unit = null, extra = {}) => ({ name, amount, unit, ...extra });
+const AUSWAHL_GEMUESE = { name: 'Gemüse', auswahl: 'gemuese' };
+const AUSWAHL_VEGGIE = { name: 'Veggie-Alternative', auswahl: 'veggie' };
+
+const DISHES = [
+  { name: 'Nudeln mit Hackbällchen', ingredients: [I('Penne', 1, 'Stk'), I('Veganes formbares Mühlen Hack', 1, 'Stk'), I('Sahne', 250, 'ml'), I('Erbsen & Möhrchen', 1, 'Dose'), I('Maggi Fix Zwiebel-Sahne-Hähnchen', 1, 'Stk')] },
+  { name: 'Kalte Wraps', ingredients: [I('Wraps', 1, 'Stk'), I('Veggie Chicken Sticks', 1, 'Stk'), I('Pilze', 250, 'g'), I('Tomaten'), I('Eisbergsalat'), I('Mozzarella', 1, 'Stk')] },
+  { name: 'Kalter Nudelsalat', ingredients: [I('Penne', 1, 'Stk'), I('Feta', 1, 'Stk'), I('Getrocknete Tomaten', 1, 'Stk'), I('Mozzarella', 1, 'Stk'), I('Aceto Balsamico', 1, 'EL'), I('Knoblauch'), I('Olivenöl')] },
+  { name: 'Philippinischer Knoblauchreis', ingredients: [I('Jasminreis'), I('Lauchzwiebeln', 1, 'Stk'), I('Sonnenblumenöl'), I('Weißer Pfeffer'), I('Knoblauch')] },
+  { name: 'Bauerntopf', ingredients: [I('Kartoffeln, vorwiegend festkochend', 1, 'kg'), I('Veganes Hack (Krümel)', 1, 'Stk'), I('Tomatenmark'), I('Öl'), I('Suppengemüse', 1, 'Stk'), I('Gemüsebrühe')] },
+  { name: 'Pizza', ingredients: [I('Pizza', 3, 'Stk', { note: '1× Sam, 1× Artjom, 1× Ben' })] },
+  { name: 'Ofenkäse', ingredients: [I('Ofenkäse', 2, 'Stk'), I('Brötchen', 1, 'Packung')] },
+  { name: 'Ofen-Feta', ingredients: [I('Feta', 2, 'Stk'), I('Brötchen', 1, 'Packung'), I('Öl'), I('Zwiebeln'), I('Paprikapulver edelsüß')] },
+  { name: 'Kartoffelpüree mit Gemüse und Veggie-Alternative', ingredients: [I('Kartoffeln, vorwiegend festkochend', 1, 'kg'), I('Möhren'), I('Süßkartoffel', 1, 'Stk'), AUSWAHL_GEMUESE, AUSWAHL_VEGGIE] },
+  { name: 'Bowl', ingredients: [I('Süßkartoffeln', 3, 'Stk'), I('Tofu', 1, 'Stk'), I('Tomaten'), I('Gurken'), I('Feta', 1, 'Stk'), I('Helle Sojasauce'), I('Knoblauch')] },
+  { name: 'Kartoffelwedges mit Gemüse und Veggie-Alternative', ingredients: [I('Kartoffeln, vorwiegend festkochend', 1, 'kg'), AUSWAHL_GEMUESE, AUSWAHL_VEGGIE, I('Öl')] },
+  { name: 'Vegetarisches Hühnerfrikassee', ingredients: [I('Veganes Hähnchengeschnetzeltes', 1, 'Stk'), I('Zwiebeln'), I('TK-Erbsen'), I('Möhren', 3, 'Stk'), I('Pilze', 250, 'g'), I('Butter'), I('Mehl'), I('Gemüsebrühepulver'), I('Sahne', 1, 'Stk')] },
+  { name: 'Vegetarische Lasagne', ingredients: [I('Lasagneplatten', 1, 'Stk'), I('Frischkäse', 1, 'Stk'), I('Streukäse', 1, 'Stk'), I('Veganes Hack (Krümel)', 1, 'Stk'), I('Maggi Fix Lasagne', 1, 'Stk')] },
+  { name: 'Vegetarische Spaghetti Bolognese', ingredients: [I('Spaghetti', 1, 'Stk'), I('Veganes Hack (Krümel)', 1, 'Stk'), I('Maggi Fix Tomaten-Bolognese', 1, 'Stk'), I('Parmesan', 1, 'Stk')] },
+  { name: 'Tortellini mit Brokkoli und Pilzen in Sahnesauce', ingredients: [I('Tortellini Ricotta-Spinat', 1, 'Stk'), I('Pilze', 250, 'g'), I('TK-Brokkoli', 1, 'Stk'), I('Sahne', 1, 'Stk'), I('Tomatenmark', 1, 'Stk'), I('Streukäse', 1, 'Stk')] },
+  { name: 'Chili sin Carne Wraps', ingredients: [I('Wraps', 1, 'Stk'), I('Veganes Hack (Krümel)', 1, 'Stk'), I('Maggi Fix Chili con Carne', 1, 'Stk'), I('Mais', 1, 'Stk'), I('Kidneybohnen', 1, 'Stk'), I('Streukäse', 1, 'Stk')] },
+  { name: 'Vegetarische Pelmeni', ingredients: [I('Veganes formbares Mühlen Hack', 1, 'Stk'), I('Eier', 1, 'Stk'), I('Zwiebeln'), I('Knoblauch'), I('Mehl'), I('Schmand', 1, 'Stk')] },
+  { name: 'Nudeln mit Ei', ingredients: [I('Penne', 1, 'Stk'), AUSWAHL_GEMUESE, I('Eier'), I('Helle Sojasauce'), I('Knoblauch')] },
+  { name: 'Süßkartoffel-Rosenkohl-Blech', ingredients: [I('Süßkartoffeln', 3, 'Stk'), I('TK-Rosenkohl', 1, 'Stk'), I('Feta', 1, 'Stk'), I('Öl')] },
+  { name: 'Salat', ingredients: [I('Gurken'), I('Tomaten'), I('Mais', 1, 'Stk'), I('Zwiebeln'), I('Dill-Kräuter-Fix', 1, 'Stk')] },
+  { name: 'Vegetarischer Döner', ingredients: [I('Döner- oder Pita-Brot', 1, 'Stk'), I('Veganes Dönerfleisch / Like Döner', 1, 'Stk'), I('Feta', 1, 'Stk'), I('Tomaten'), I('Gurken'), I('Pommes', 1, 'Stk')] },
+  { name: 'Pita', ingredients: [I('Pita-Brot', 1, 'Stk'), I('Füllung nach Wunsch')] },
+  { name: 'Pommes mit Veggie-Schnitzel', ingredients: [I('Pommes', 1, 'Stk'), AUSWAHL_VEGGIE, AUSWAHL_GEMUESE] },
+  { name: 'Pommes mit vegetarischem Burger', ingredients: [I('Burgerbrötchen', 1, 'Stk'), I('Vegane Burger-Patties', 1, 'Stk'), I('Tomaten'), I('Zwiebeln'), I('Dino-Nuggets', 1, 'Stk'), I('Eisbergsalat', 1, 'Stk'), I('Sandwichkäse', 1, 'Stk'), I('Pommes', 1, 'Stk')] },
+  { name: 'Kartoffelgratin', ingredients: [I('Kartoffeln, vorwiegend festkochend', 1, 'kg'), I('Milch', 1, 'Stk'), I('Sahne', 1, 'Stk'), I('Knoblauch'), I('Butter'), I('Streukäse', 1, 'Stk')] },
+];
+
+const BASIS_ITEMS = [
+  'Geschirrlappen', 'Geschirrschwämme', 'Hafermilch', 'Milch', 'Eier', 'Brot', 'Brötchen',
+  'Aufschnitt Ben', 'Aufschnitt Artjom', 'Käseaufschnitt', 'Lätta', 'Gurken', 'Bananen',
+  'Sonstiges Obst', 'Zewa', 'Toilettenpapier', 'Duschgel', 'Windeln', 'Spültabs', 'Couscous',
+  'Kita-Snacks', 'Shampoo', 'Wasser', 'Katzenstreu', 'Eistee Zero'
+];
+
+const PANTRY_ITEMS = [
+  'Öl', 'Sonnenblumenöl', 'Olivenöl', 'Aceto Balsamico', 'Tomatenmark', 'Knoblauch', 'Zwiebeln',
+  'Mehl', 'Butter', 'Eier', 'TK-Erbsen', 'Helle Sojasauce', 'Paprikapulver edelsüß',
+  'Gemüsebrühepulver', 'Weißer Pfeffer', 'Salz', 'Pfeffer', 'Zucker', 'Reis', 'Couscous',
+  'Nudeln', 'Kartoffeln', 'Milch', 'Sahne', 'Brötchen', 'Brot'
+];
+
+const ALIASES = { 'kartoffeln, vorwiegend festkochend': 'kartoffeln' };
+
+const BASIS_LOWER = new Set(BASIS_ITEMS.map(x => x.toLowerCase()));
+const PANTRY_ONLY = PANTRY_ITEMS.filter(p => !BASIS_LOWER.has(p.toLowerCase()));
+const ALL_CHECKLIST = [...BASIS_ITEMS, ...PANTRY_ONLY];
+
+function getChecklistMatch(ingName) {
+  const norm = ingName.trim().toLowerCase();
+  const aliased = ALIASES[norm] || norm;
+  return ALL_CHECKLIST.find(it => it.toLowerCase() === aliased) || null;
+}
+
+const DAYS = ['Tag 1', 'Tag 2', 'Tag 3', 'Tag 4', 'Tag 5', 'Tag 6', 'Tag 7'];
+
+/* ---------------------------------------------------------
+   HILFSFUNKTIONEN
+--------------------------------------------------------- */
+
+function aggregate(entries) {
+  const groups = {};
+  entries.forEach(e => {
+    const key = e.name.trim().toLowerCase();
+    if (!groups[key]) groups[key] = { displayName: e.name.trim(), subunits: {}, hasFlag: false, notes: new Set() };
+    const g = groups[key];
+    if (e.amount == null) {
+      g.hasFlag = true;
+    } else {
+      const u = e.unit || 'Stk';
+      g.subunits[u] = (g.subunits[u] || 0) + e.amount;
+    }
+    if (e.note) g.notes.add(e.note.trim());
+  });
+  return Object.values(groups)
+    .map(g => {
+      const parts = Object.entries(g.subunits).map(([u, amt]) => u === 'Stk' ? `${amt}×` : `${amt} ${u}`);
+      let qty = parts.length > 0 ? parts.join(', ') : '';
+      let extra = g.notes.size > 0 ? ` (${[...g.notes].join('; ')})` : '';
+      return { name: g.displayName + extra, qty };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+}
+
+function dishHasAuswahl(dish) {
+  return dish && dish.ingredients.some(ing => ing.auswahl);
+}
+
+/* ---------------------------------------------------------
+   UI BAUSTEINE
+--------------------------------------------------------- */
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+      <path d="M1 5.5L5 9.5L13 1.5" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CheckRow({ label, checked, onToggle, badge }) {
+  return (
+    <div className="check-row" onClick={onToggle}>
+      <div className={"checkbox" + (checked ? " checked" : "")}><CheckIcon /></div>
+      <div className={"check-text" + (checked ? "" : " unchecked")}>
+        {label}
+        {badge ? <span className="badge-week">diese Woche</span> : null}
+      </div>
+    </div>
+  );
+}
+
+function StepHeader({ page, label }) {
+  return (
+    <div className="app-header">
+      <div className="app-title"><span className="emoji">🧺</span> Wochenplaner</div>
+      <div className="step-track">
+        {[1, 2, 3, 4, 5].map(n => <div key={n} className={"step-seg" + (n <= page ? " active" : "")}></div>)}
+      </div>
+      <div className="step-label">Schritt {page} von 5 · {label}</div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------
+   APP
+--------------------------------------------------------- */
+
+const STORAGE_KEY = 'wochenplaner-v1';
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function App() {
+  const [page, setPage] = useState(() => {
+    const s = loadSaved();
+    return (s && s.page) || 1;
+  });
+  const [selectedDishes, setSelectedDishes] = useState(() => {
+    const s = loadSaved();
+    return (s && s.selectedDishes) || Array(7).fill('');
+  });
+  const [auswahlSelections, setAuswahlSelections] = useState(() => {
+    const s = loadSaved();
+    return (s && s.auswahlSelections) || {};
+  });
+  const [pantryChecks, setPantryChecks] = useState(() => {
+    const s = loadSaved();
+    if (s && s.pantryChecks) return s.pantryChecks;
+    const obj = {};
+    ALL_CHECKLIST.forEach(it => { obj[it] = true; });
+    return obj;
+  });
+  const [manualItems, setManualItems] = useState(() => {
+    const s = loadSaved();
+    return (s && s.manualItems) || [];
+  });
+  const [addingManual, setAddingManual] = useState(false);
+  const [manualInput, setManualInput] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        page, selectedDishes, auswahlSelections, pantryChecks, manualItems
+      }));
+    } catch (e) { /* localStorage evtl. nicht verfügbar (z.B. privater Modus) */ }
+  }, [page, selectedDishes, auswahlSelections, pantryChecks, manualItems]);
+
+  const hasAuswahlDishes = useMemo(() => {
+    return selectedDishes.some(name => {
+      if (!name) return false;
+      return dishHasAuswahl(DISHES.find(d => d.name === name));
+    });
+  }, [selectedDishes]);
+
+  function handleDishChange(dayIndex, value) {
+    setSelectedDishes(prev => {
+      const next = [...prev];
+      next[dayIndex] = value;
+      return next;
+    });
+    const dish = DISHES.find(d => d.name === value);
+    setAuswahlSelections(prev => {
+      const next = { ...prev };
+      const gKey = `${dayIndex}-gemuese`;
+      const vKey = `${dayIndex}-veggie`;
+      const needsGemuese = dish && dish.ingredients.some(i => i.auswahl === 'gemuese');
+      const needsVeggie = dish && dish.ingredients.some(i => i.auswahl === 'veggie');
+      if (needsGemuese) { if (!next[gKey]) next[gKey] = GEMUESE_OPTIONS[0]; } else { delete next[gKey]; }
+      if (needsVeggie) { if (!next[vKey]) next[vKey] = VEGGIE_OPTIONS[0]; } else { delete next[vKey]; }
+      return next;
+    });
+  }
+
+  function getResolvedDayIngredients(dayIndex, dishName) {
+    const dish = DISHES.find(d => d.name === dishName);
+    if (!dish) return [];
+    return dish.ingredients.map(ing => {
+      if (ing.auswahl) {
+        const chosen = auswahlSelections[`${dayIndex}-${ing.auswahl}`];
+        if (!chosen) return null;
+        return { name: chosen, amount: 1, unit: 'Stk' };
+      }
+      return ing;
+    }).filter(Boolean);
+  }
+
+  const allResolvedIngredients = useMemo(() => {
+    let out = [];
+    selectedDishes.forEach((name, i) => {
+      if (name) out = out.concat(getResolvedDayIngredients(i, name));
+    });
+    return out;
+  }, [selectedDishes, auswahlSelections]);
+
+  const contributions = useMemo(() => {
+    const map = {};
+    allResolvedIngredients.forEach(ing => {
+      const match = getChecklistMatch(ing.name);
+      if (match) {
+        if (!map[match]) map[match] = [];
+        map[match].push(ing);
+      }
+    });
+    return map;
+  }, [allResolvedIngredients]);
+
+  const directIngredients = useMemo(() => allResolvedIngredients.filter(ing => !getChecklistMatch(ing.name)), [allResolvedIngredients]);
+
+  const sectionB = useMemo(() => PANTRY_ONLY.filter(p => (contributions[p] || []).length > 0), [contributions]);
+  const sectionC = useMemo(() => PANTRY_ONLY.filter(p => !((contributions[p] || []).length > 0)), [contributions]);
+
+  const dishesNeedingAuswahl = useMemo(() => {
+    return selectedDishes.map((name, i) => {
+      if (!name) return null;
+      const dish = DISHES.find(d => d.name === name);
+      if (!dishHasAuswahl(dish)) return null;
+      return { i, name, dish };
+    }).filter(Boolean);
+  }, [selectedDishes]);
+
+  const finalEntries = useMemo(() => {
+    let entries = [...directIngredients];
+    ALL_CHECKLIST.forEach(item => {
+      if (!pantryChecks[item]) return;
+      const contrib = contributions[item];
+      if (contrib && contrib.length > 0) {
+        entries = entries.concat(contrib);
+      } else {
+        entries.push({ name: item, amount: null, unit: null });
+      }
+    });
+    manualItems.forEach(m => entries.push({ name: m.text, amount: null, unit: null }));
+    return entries;
+  }, [directIngredients, contributions, pantryChecks, manualItems]);
+
+  const aggregatedList = useMemo(() => aggregate(finalEntries), [finalEntries]);
+
+  function togglePantry(item) {
+    setPantryChecks(prev => ({ ...prev, [item]: !prev[item] }));
+  }
+
+  function goNextFrom1() { setPage(hasAuswahlDishes ? 2 : 3); }
+  function goBackFrom3() { setPage(hasAuswahlDishes ? 2 : 1); }
+
+  function addManualItem(e) {
+    e.preventDefault();
+    if (manualInput.trim()) {
+      setManualItems(prev => [...prev, { id: Date.now() + Math.random(), text: manualInput.trim() }]);
+      setManualInput('');
+    }
+  }
+  function removeManualItem(id) {
+    setManualItems(prev => prev.filter(m => m.id !== id));
+  }
+
+  async function copyList() {
+    const text = getListText();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); } catch (e2) {}
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }
+
+  function resetAll() {
+    if (window.confirm('Neue Liste erstellen? Alle aktuellen Auswahlen werden zurückgesetzt.')) {
+      setSelectedDishes(Array(7).fill(''));
+      setAuswahlSelections({});
+      const obj = {};
+      ALL_CHECKLIST.forEach(it => { obj[it] = true; });
+      setPantryChecks(obj);
+      setManualItems([]);
+      setAddingManual(false);
+      setManualInput('');
+      setPage(1);
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    }
+  }
+
+  function getListText() {
+    return 'Einkaufsliste\n\n' + aggregatedList.map(l => `- ${l.name}${l.qty ? ' – ' + l.qty : ''}`).join('\n');
+  }
+
+  function shareWhatsApp() {
+    const url = 'https://wa.me/?text=' + encodeURIComponent(getListText());
+    window.open(url, '_blank');
+  }
+
+  function shareEmail() {
+    const subject = encodeURIComponent('Einkaufsliste');
+    const body = encodeURIComponent(getListText());
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  }
+
+  /* ---------------- PAGE RENDERERS ---------------- */
+
+  function Page1() {
+    return (
+      <React.Fragment>
+        <StepHeader page={1} label="Gerichte wählen" />
+        <div className="app-body">
+          <div className="page-title">Was gibt's diese Woche?</div>
+          <div className="page-sub">Wähle für jeden Tag ein Gericht aus. Tage können auch leer bleiben.</div>
+          <div className="save-note">💾 Deine Auswahl wird automatisch auf diesem Gerät gespeichert.</div>
+          {DAYS.map((day, i) => (
+            <div className="card day-card" key={day}>
+              <div className="day-label"><span className="day-badge">{i + 1}</span>{day}</div>
+              <select value={selectedDishes[i]} onChange={e => handleDishChange(i, e.target.value)}>
+                <option value="">– kein Gericht –</option>
+                {DISHES.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+              </select>
+            </div>
+          ))}
+        </div>
+        <div className="footer-nav">
+          <button className="btn btn-primary" onClick={goNextFrom1}>Weiter</button>
+        </div>
+      </React.Fragment>
+    );
+  }
+
+  function Page2() {
+    return (
+      <React.Fragment>
+        <StepHeader page={2} label="Auswahl-Zutaten" />
+        <div className="app-body">
+          <div className="page-title">Zutaten konkretisieren</div>
+          <div className="page-sub">Für folgende Gerichte kannst du Zutaten auswählen:</div>
+          {dishesNeedingAuswahl.length === 0 && (
+            <div className="empty-hint">Für diese Woche gibt es nichts zu konkretisieren.</div>
+          )}
+          {dishesNeedingAuswahl.map(({ i, name, dish }) => (
+            <div className="card" key={i}>
+              <div className="day-label" style={{ marginBottom: 10 }}>
+                <span className="day-badge">{i + 1}</span>{DAYS[i]} · {name}
+              </div>
+              {dish.ingredients.some(ing => ing.auswahl === 'gemuese') && (
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 13.5, color: 'var(--ink-soft)', marginBottom: 6, fontWeight: 600 }}>Gemüse</div>
+                  <select
+                    value={auswahlSelections[`${i}-gemuese`] || GEMUESE_OPTIONS[0]}
+                    onChange={e => setAuswahlSelections(prev => ({ ...prev, [`${i}-gemuese`]: e.target.value }))}
+                  >
+                    {GEMUESE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+              )}
+              {dish.ingredients.some(ing => ing.auswahl === 'veggie') && (
+                <div>
+                  <div style={{ fontSize: 13.5, color: 'var(--ink-soft)', marginBottom: 6, fontWeight: 600 }}>Veggie-Alternative</div>
+                  <select
+                    value={auswahlSelections[`${i}-veggie`] || VEGGIE_OPTIONS[0]}
+                    onChange={e => setAuswahlSelections(prev => ({ ...prev, [`${i}-veggie`]: e.target.value }))}
+                  >
+                    {VEGGIE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="footer-nav">
+          <button className="btn btn-ghost btn-back" onClick={() => setPage(1)}>Zurück</button>
+          <button className="btn btn-primary" onClick={() => setPage(3)}>Weiter</button>
+        </div>
+      </React.Fragment>
+    );
+  }
+
+  function Page3() {
+    return (
+      <React.Fragment>
+        <StepHeader page={3} label="Vorräte prüfen" />
+        <div className="app-body">
+          <div className="page-title">Was habt ihr schon?</div>
+          <div className="hint-box">Prüfe bitte, was ihr bereits zu Hause habt. Entferne den Haken bei allem, was nicht gekauft werden muss.</div>
+
+          <div className="section-title">Basis-Einkaufsliste</div>
+          <div className="card" style={{ padding: '4px 12px' }}>
+            {BASIS_ITEMS.map(item => (
+              <CheckRow key={item} label={item} checked={pantryChecks[item]} onToggle={() => togglePantry(item)} />
+            ))}
+          </div>
+
+          {sectionB.length > 0 && (
+            <React.Fragment>
+              <div className="section-title">Für deine gewählten Gerichte</div>
+              <div className="card" style={{ padding: '4px 12px' }}>
+                {sectionB.map(item => (
+                  <CheckRow key={item} label={item} checked={pantryChecks[item]} onToggle={() => togglePantry(item)} badge />
+                ))}
+              </div>
+            </React.Fragment>
+          )}
+
+          <div className="section-title">Typische Vorratsartikel</div>
+          <div className="card" style={{ padding: '4px 12px' }}>
+            {sectionC.map(item => (
+              <CheckRow key={item} label={item} checked={pantryChecks[item]} onToggle={() => togglePantry(item)} />
+            ))}
+          </div>
+        </div>
+        <div className="footer-nav">
+          <button className="btn btn-ghost btn-back" onClick={goBackFrom3}>Zurück</button>
+          <button className="btn btn-primary" onClick={() => setPage(4)}>Weiter</button>
+        </div>
+      </React.Fragment>
+    );
+  }
+
+  function Page4() {
+    return (
+      <React.Fragment>
+        <StepHeader page={4} label="Weitere Artikel" />
+        <div className="app-body">
+          <div className="page-title">Sonst noch was?</div>
+          <div className="page-sub">Füge zusätzliche Artikel hinzu, die nicht automatisch in der Liste sind.</div>
+
+          {manualItems.length > 0 && (
+            <div className="card" style={{ padding: '4px 12px', marginBottom: 14 }}>
+              {manualItems.map(m => (
+                <div className="manual-item-row" key={m.id}>
+                  <span>{m.text}</span>
+                  <button className="del-btn" onClick={() => removeManualItem(m.id)} aria-label="Löschen">×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!addingManual && (
+            <button className="manual-add-btn" onClick={() => setAddingManual(true)}>+ Artikel hinzufügen</button>
+          )}
+          {addingManual && (
+            <form className="manual-input-row" onSubmit={addManualItem}>
+              <input
+                autoFocus
+                type="text"
+                placeholder="z. B. Kerzen"
+                value={manualInput}
+                onChange={e => setManualInput(e.target.value)}
+              />
+              <button type="submit" className="btn btn-primary" style={{ flex: '0 0 auto' }}>Hinzufügen</button>
+            </form>
+          )}
+        </div>
+        <div className="footer-nav" style={{ flexWrap: 'wrap' }}>
+          <button className="btn btn-ghost btn-back" onClick={() => setPage(3)}>Zurück</button>
+          <button className="btn btn-ghost" onClick={() => { setAddingManual(false); setPage(5); }}>Keine weiteren</button>
+          <button className="btn btn-primary" onClick={() => { setAddingManual(false); setPage(5); }}>Weiter</button>
+        </div>
+      </React.Fragment>
+    );
+  }
+
+  function Page5() {
+    const itemCount = aggregatedList.length;
+    return (
+      <React.Fragment>
+        <StepHeader page={5} label="Einkaufsliste" />
+        <div className="app-body">
+          <div className="page-title">Deine Einkaufsliste</div>
+          <div className="page-sub">Fertig zusammengestellt und aggregiert.</div>
+
+          <div className="receipt">
+            <div className="receipt-head">
+              <div className="t1">EINKAUFSLISTE</div>
+              <div className="t2">{itemCount} Artikel</div>
+            </div>
+            {itemCount === 0 && <div className="empty-hint">Noch keine Artikel ausgewählt.</div>}
+            {aggregatedList.map((l, idx) => (
+              <div className="receipt-line" key={idx}>
+                <span className="name">{l.name}</span>
+                {l.qty && <span className="qty">{l.qty}</span>}
+              </div>
+            ))}
+            <div className="receipt-foot">— guten Appetit —</div>
+          </div>
+
+          {itemCount > 0 && (
+            <div className="share-row">
+              <button className="btn share-btn share-copy" onClick={copyList}>📋<br />Kopieren</button>
+              <button className="btn share-btn share-whatsapp" onClick={shareWhatsApp}>💬<br />WhatsApp</button>
+              <button className="btn share-btn share-email" onClick={shareEmail}>✉️<br />E-Mail</button>
+            </div>
+          )}
+        </div>
+        <div className="footer-nav">
+          <button className="btn btn-ghost btn-back" onClick={() => setPage(4)}>Zurück</button>
+          <button className="btn btn-primary" onClick={resetAll} style={{ flex: 1 }}>Neue Liste erstellen</button>
+        </div>
+        {copied && <div className="copied-toast">In Zwischenablage kopiert ✓</div>}
+      </React.Fragment>
+    );
+  }
+
+  let content;
+  if (page === 1) content = <Page1 />;
+  else if (page === 2) content = <Page2 />;
+  else if (page === 3) content = <Page3 />;
+  else if (page === 4) content = <Page4 />;
+  else content = <Page5 />;
+
+  return <div className="app-shell">{content}</div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
